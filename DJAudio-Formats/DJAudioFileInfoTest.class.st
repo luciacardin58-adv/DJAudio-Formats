@@ -15,13 +15,12 @@ DJAudioFileInfoTest >> setUp [
 info := DJAudioFileInfo  new.
 ]
 
-{ #category : 'tests' }
-DJAudioFileInfoTest >> testDuration [ 
+{ #category : 'accessing' }
+DJAudioFileInfoTest >> testDuration [
 
-"88200 samples at 44.1 kHz sample rate last 1 second"
-info lengthInSamples: 88200.
+info lengthInSamples: 44100 * 332.
 
-self assert: info durationInSeconds equals: 2
+self assert: info duration equals: (Duration seconds: 332).
 ]
 
 { #category : 'tests' }

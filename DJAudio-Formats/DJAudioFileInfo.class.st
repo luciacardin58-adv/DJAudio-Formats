@@ -33,9 +33,14 @@ DJAudioFileInfo >> bitsPerSample: anInteger [
 	bitsPerSample := anInteger
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'helpers' }
+DJAudioFileInfo >> duration [
+	^ Duration seconds: self  durationInSeconds 
+]
+
+{ #category : 'helpers' }
 DJAudioFileInfo >> durationInSeconds [
-	^ self durationInSeconds  / self sampleRate
+	 ^ self lengthInSamples / self sampleRate 
 ]
 
 { #category : 'accessing' }

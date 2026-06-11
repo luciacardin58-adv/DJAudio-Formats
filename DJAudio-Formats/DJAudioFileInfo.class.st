@@ -21,6 +21,16 @@ Class {
 	#package : 'DJAudio-Formats'
 }
 
+{ #category : 'query metadata' }
+DJAudioFileInfo >> artist [ 
+    ^metadata at: 'artist' ifAbsent: [ '' ]
+]
+
+{ #category : 'helpers' }
+DJAudioFileInfo >> bitrateKbps [ 
+    ^(sampleRate * bitsPerSample * numChannels / 1000) rounded
+]
+
 { #category : 'accessing' }
 DJAudioFileInfo >> bitsPerSample [
 
@@ -31,6 +41,21 @@ DJAudioFileInfo >> bitsPerSample [
 DJAudioFileInfo >> bitsPerSample: anInteger [
 
 	bitsPerSample := anInteger
+]
+
+{ #category : 'query metadata' }
+DJAudioFileInfo >> bpm [ 
+    ^metadata at: 'bpm' ifAbsent: [ nil ]
+
+]
+
+{ #category : 'helpers' }
+DJAudioFileInfo >> channelDescription [ 
+
+"stereo or mono"
+    numChannels = 1 ifTrue: [ ^'Mono' ].
+    numChannels = 2 ifTrue: [ ^'Stereo' ].
+    ^numChannels printString 
 ]
 
 { #category : 'helpers' }
@@ -101,6 +126,21 @@ DJAudioFileInfo >> numChannels: anInteger [
 	numChannels := anInteger
 ]
 
+{ #category : 'printing' }
+DJAudioFileInfo >> printOn: aStream [ 
+    aStream
+        nextPutAll: 'DJAudioFileInfo(';
+        nextPutAll: self title;
+        nextPutAll: ' | ';
+        print: sampleRate;
+        nextPutAll: 'Hz ';
+        print: bitsPerSample;
+        nextPutAll: 'bit ';
+        nextPutAll: self channelDescription;
+        nextPut: $)
+
+]
+
 { #category : 'accessing' }
 DJAudioFileInfo >> sampleRate [
 
@@ -111,6 +151,14 @@ DJAudioFileInfo >> sampleRate [
 DJAudioFileInfo >> sampleRate: anObject [
 
 	sampleRate := anObject
+]
+
+{ #category : 'query metadata' }
+DJAudioFileInfo >> title [  
+
+    ^metadata at: 'title' ifAbsent: [
+        filePath ifNil: [ '' ] ifNotNil: [ :p | p asFileReference basenameWithoutExtension ] ]
+
 ]
 
 { #category : 'accessing' }

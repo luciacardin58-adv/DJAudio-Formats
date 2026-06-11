@@ -21,7 +21,7 @@ DJAiffAudioFormat >> fileExtensions [
 { #category : 'accessing' }
 DJAiffAudioFormat >> formatName [
 
-	[^'AIFF']
+	^ 'AIFF' 
 ]
 
 { #category : 'parsing' }
@@ -29,6 +29,14 @@ DJAiffAudioFormat >> parseAIFF: aStream into: info [
     self readFormHeaderFrom: aStream.
     [ aStream atEnd ] whileFalse: [
         self readNextChunkFrom: aStream into: info ]
+]
+
+{ #category : 'parsing' }
+DJAiffAudioFormat >> parseCOMM: aStream size: chunkSize into: info [ 
+    info numChannels:    (self readBigEndian16: aStream).
+    info lengthInSamples: (self readBigEndian32: aStream).
+    info bitsPerSample:  (self readBigEndian16Signed: aStream).
+    info sampleRate:     (self read80bitExtendedFrom: aStream)
 ]
 
 { #category : 'parsing' }
@@ -46,37 +54,34 @@ DJAiffAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: inf
 ]
 
 { #category : 'reading' }
-DJAiffAudioFormat >> read80bitExtended: aStream [
-    | sign exponent mantissa result bytes |
-    bytes    := aStream next: 10.
-    sign     := (bytes first) bitAnd: 16r80.
-    exponent := ((bytes first) bitAnd: 16r7F) bitShift: 8.
-    exponent := exponent + (bytes at: 2).
+DJAiffAudioFormat >> read80bitExtendedFrom: aStream [ 
+    "Decode 80-bit IEEE 754 extended big-endian to an integer sample rate."
+    | exp mantissa |
+    exp      := ((aStream next bitAnd: 16r7F) bitShift: 8) + aStream next.
     mantissa := 0.
-    3 to: 10 do: [ :i | mantissa := (mantissa bitShift: 8) + (bytes at: i) ].
-    exponent = 0
-        ifTrue:  [ result := 0.0 ]
-        ifFalse: [
-            result := mantissa asFloat * (2.0 raisedTo: exponent - 16383 - 63).
-            sign ~= 0 ifTrue: [ result := result negated ] ].
-    ^result
+    1 to: 8 do: [ :i | mantissa := (mantissa bitShift: 8) + aStream next ].
+    ^ mantissa bitShift: exp - 16383 - 63
 ]
 
 { #category : 'reading' }
-DJAiffAudioFormat >> readBigEndian16Signed: aStream [
+DJAiffAudioFormat >> readBigEndian16: aStream [ 
+    ^ (aStream next bitShift: 8) + aStream next
+]
+
+{ #category : 'reading' }
+DJAiffAudioFormat >> readBigEndian16Signed: aStream [ 
     | val |
-    val := (aStream next bitShift: 8) + aStream next.
+    val := self readBigEndian16: aStream.
     val >= 16r8000 ifTrue: [ val := val - 16r10000 ].
-    ^val
+    ^ val
 ]
 
 { #category : 'reading' }
-DJAiffAudioFormat >> readBigEndian32: aStream [
-
-    | b0 b1 b2 b3 |
-    b0 := aStream next. b1 := aStream next.
-    b2 := aStream next. b3 := aStream next.
-    ^(b0 bitShift: 24) + (b1 bitShift: 16) + (b2 bitShift: 8) + b3
+DJAiffAudioFormat >> readBigEndian32: aStream [ 
+    ^ ((aStream next bitShift: 24)
+        + (aStream next bitShift: 16)
+        + (aStream next bitShift: 8)
+        + aStream next)
 ]
 
 { #category : 'parsing' }

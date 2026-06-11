@@ -3,7 +3,7 @@ Reads back the file produced by DJAiffGenerator and asserts
  every field matches exactly what the generator wrote.
 "
 Class {
-	#name : 'DJAiffAudioFormatsTest',
+	#name : 'DJAiffAudioFormatsTests',
 	#superclass : 'TestCase',
 	#instVars : [
 		'testFile',
@@ -15,7 +15,7 @@ Class {
 }
 
 { #category : 'running' }
-DJAiffAudioFormatsTest >> setUp [
+DJAiffAudioFormatsTests >> setUp [
 
 	super setUp.
 	testFile := DJAiffGenerator generateTo:
@@ -24,18 +24,18 @@ DJAiffAudioFormatsTest >> setUp [
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTest >> tearDown [ 
+DJAiffAudioFormatsTests >> tearDown [ 
  testFile exists ifTrue: [ testFile delete ]
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTest >> testFilePathSet [ 
+DJAiffAudioFormatsTests >> testFilePathSet [ 
     self assert: (info filePath endsWith: 'dj_test.aiff')
 
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTest >> testInfoNotNil [ 
+DJAiffAudioFormatsTests >> testInfoNotNil [ 
     self assert: info notNil
 
 ]

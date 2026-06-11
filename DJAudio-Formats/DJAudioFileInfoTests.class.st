@@ -1,5 +1,5 @@
 Class {
-	#name : 'DJAudioFileInfoTest',
+	#name : 'DJAudioFileInfoTests',
 	#superclass : 'TestCase',
 	#instVars : [
 		'info'
@@ -10,13 +10,13 @@ Class {
 }
 
 { #category : 'running' }
-DJAudioFileInfoTest >> setUp [
+DJAudioFileInfoTests >> setUp [
 	super setUp.
 info := DJAudioFileInfo  new.
 ]
 
 { #category : 'accessing' }
-DJAudioFileInfoTest >> testDuration [
+DJAudioFileInfoTests >> testDuration [
 
 info lengthInSamples: 44100 * 332.
 
@@ -24,7 +24,7 @@ self assert: info duration equals: (Duration seconds: 332).
 ]
 
 { #category : 'tests' }
-DJAudioFileInfoTest >> testInitialize [ 
+DJAudioFileInfoTests >> testInitialize [ 
 self assert: info sampleRate equals: 44100.
     self assert: info bitsPerSample equals: 16.
     self assert: info numChannels equals: 2.

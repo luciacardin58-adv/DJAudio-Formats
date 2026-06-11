@@ -28,6 +28,22 @@ DJAudioFileGenerator class >> generateTo: aFileReference [
     ^ self new generateTo: aFileReference
 ]
 
+{ #category : 'accessing' }
+DJAudioFileGenerator >> bitsPerSample [ 
+ 
+^ 24
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> bytesPerSample [ 
+ ^ self bitsPerSample // 8 
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> durationInSeconds [ 
+^ 3
+]
+
 { #category : 'template method' }
 DJAudioFileGenerator >> generateTo: aFileReference [ 
     "Write the binary content to aFileReference. Returns aFileReference."
@@ -42,6 +58,22 @@ DJAudioFileGenerator >> generateTo: aFileReference [
 { #category : 'accessing' }
 DJAudioFileGenerator >> metadata [ 
 ^ self subclassResponsibility 
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> numChannels [ 
+^ 1
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> numFrames [
+
+	^ self sampleRate * self durationInSeconds
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> sampleRate [ 
+^ 48000
 ]
 
 { #category : 'writing' }

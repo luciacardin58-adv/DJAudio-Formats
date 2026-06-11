@@ -16,20 +16,15 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-DJAiffGenerator class >> generateTo: aPathString [ 
-    "Entry point. Write a silent 24-bit 48kHz mono AIFF to aPathString."
+DJAiffGenerator class >> generateTo: aFileReference [ 
+    "Entry point. Write a silent 24-bit 48kHz mono AIFF to aFileReference."
     | gen aStream |
     gen := self new.
     aStream := WriteStream on: ByteArray new.
-    gen writeAiffTo: aStream .
-    aPathString asFileReference
-        binaryWriteStreamDo: [ :s | s nextPutAll: aStream contents ]
-]
-
-{ #category : 'accessing' }
-DJAiffGenerator >> bitsPerSample [ 
- 
-^ 24
+    gen writeContainerTo: aStream.
+    aFileReference binaryWriteStreamDo: [ :s |
+        s nextPutAll: aStream contents ].
+    ^ aFileReference
 ]
 
 { #category : 'writing' }
@@ -50,16 +45,6 @@ DJAiffGenerator >> buildPayload [
 ]
 
 { #category : 'accessing' }
-DJAiffGenerator >> bytesPerSample [ 
- ^ self bitsPerSample // 8 
-]
-
-{ #category : 'accessing' }
-DJAiffGenerator >> durationInSeconds [ 
-^ 3
-]
-
-{ #category : 'accessing' }
 DJAiffGenerator >> metadata [ 
     ^ Dictionary new
         at: 'artist'  put: 'Lucia Cardin';
@@ -71,17 +56,6 @@ DJAiffGenerator >> metadata [
         yourself
 
  
-]
-
-{ #category : 'accessing' }
-DJAiffGenerator >> numChannels [ 
-^ 1
-]
-
-{ #category : 'accessing' }
-DJAiffGenerator >> numFrames [
-
-	^ self sampleRate * self durationInSeconds
 ]
 
 { #category : 'parsing' }
@@ -102,11 +76,6 @@ DJAiffGenerator >> readNextChunkFrom: aStream into: info [
     "every odd-sized chunk is followed by one pad byte"
     (chunkSize odd and: [ aStream atEnd not ])
         ifTrue: [ aStream skip: 1 ]
-]
-
-{ #category : 'accessing' }
-DJAiffGenerator >> sampleRate [ 
-^ 48000
 ]
 
 { #category : 'writing' }

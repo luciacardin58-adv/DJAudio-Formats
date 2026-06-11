@@ -87,6 +87,18 @@ DJAiffGenerator >> writeAUTHTo: aStream [
 ]
 
 { #category : 'writing' }
+DJAiffGenerator >> writeAiffTo: aStream [
+    "Write FORM/AIFF container with all chunks."
+    | formPayload |
+    formPayload := self buildAiffPayload .
+    "FORM header"
+    self writeFourCC: 'FORM' to: aStream .
+    self writeInt32BE: formPayload size + 4 to: aStream .  "+4 for 'AIFF' tag"
+    self writeFourCC: 'AIFF' to: aStream .
+    aStream nextPutAll: formPayload
+]
+
+{ #category : 'writing' }
 DJAiffGenerator >> writeExtended: aNumber to: aStream [
     "Encode aNumber (a positive integer) as 80-bit IEEE 754 extended.
      Byte layout: sign+exponent (16 bits) | mantissa (64 bits, integer part explicit)."

@@ -112,6 +112,24 @@ DJAiffAudioFormat >> readInfoForm: aFileReference [
     ^info
 ]
 
+{ #category : 'reading' }
+DJAiffAudioFormat >> readInfoFrom: aFileReference [
+ | info stream |
+    info := DJAudioFileInfo new.
+    info filePath: aFileReference fullName.
+    stream := aFileReference binaryReadStream.
+    [
+        self parseAIFF: stream into: info
+    ] on: Error do: [ :e |
+        self inform: 'DJAiffAudioFormat error: ' , e messageText.
+        stream close.
+        ^ nil
+    ].
+    stream close.
+    ^ info
+ 
+]
+
 { #category : 'parsing' }
 DJAiffAudioFormat >> readNextChunkFrom: aStream into: info [ 
     | chunkId chunkSize |

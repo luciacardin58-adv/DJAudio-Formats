@@ -14,6 +14,9 @@ Inspired by JUCE''s AudioFormat class.
 Class {
 	#name : 'DJAudioFormat',
 	#superclass : 'Object',
+	#instVars : [
+		'formats'
+	],
 	#category : 'DJAudio-Formats-Readers',
 	#package : 'DJAudio-Formats',
 	#tag : 'Readers'
@@ -43,4 +46,19 @@ DJAudioFormat >> formatName [
 DJAudioFormat >> readInfoForm: aFileReference [
 
 	self subclassResponsibility
+]
+
+{ #category : 'as yet unclassified' }
+DJAudioFormat >> readInfoFrom: aFileReference [ 
+    self subclassResponsibility
+]
+
+{ #category : 'as yet unclassified' }
+DJAudioFormat >> readInfoFromFile: aFileReference [ 
+    formats do: [ :fmt |
+        (fmt canHandleFile: aFileReference) ifTrue: [
+            ^fmt readInfoFrom: aFileReference
+        ]
+    ].
+    ^nil
 ]

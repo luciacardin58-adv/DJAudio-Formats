@@ -43,10 +43,15 @@ DJAiffGenerator >> buildAiffPayload [
 ]
 
 { #category : 'parsing' }
-DJAiffGenerator >> parseAIFF: aStream into: info [ 
-    self readFormHeaderFrom: aStream.
-    [ aStream atEnd ] whileFalse: [
-        self readNextChunkFrom: aStream into: info ]
+DJAiffGenerator >> metadata [ 
+    ^ Dictionary new
+        at: 'artist'  put: 'Lucia Cardin';
+        at: 'title'   put: 'DummyAiff';
+        at: 'album'   put: 'DummyForTests';
+        at: 'year'    put: '2026';
+        at: 'genre'   put: 'Ambient';
+        at: 'comment' put: 'Silent Test';
+        yourself
 ]
 
 { #category : 'parsing' }
@@ -67,20 +72,6 @@ DJAiffGenerator >> readNextChunkFrom: aStream into: info [
     "every odd-sized chunk is followed by one pad byte"
     (chunkSize odd and: [ aStream atEnd not ])
         ifTrue: [ aStream skip: 1 ]
-]
-
-{ #category : 'parsing' }
-DJAiffGenerator >> rseChunk: chunkId size: chunkSize from: aStream into: info [ 
-    chunkId = 'COMM' ifTrue: [
-        ^ self parseCOMM: aStream size: chunkSize into: info ].
-    chunkId = 'NAME' ifTrue: [
-        ^ info metadata at: 'title'   put: (self readText: aStream size: chunkSize) ].
-    chunkId = 'AUTH' ifTrue: [
-        ^ info metadata at: 'artist'  put: (self readText: aStream size: chunkSize) ].
-    chunkId = 'ANNO' ifTrue: [
-        ^ info metadata at: 'comment' put: (self readText: aStream size: chunkSize) ].
-    "unknown chunk — skip content only; padding handled by caller"
-    aStream skip: chunkSize
 ]
 
 { #category : 'writing' }

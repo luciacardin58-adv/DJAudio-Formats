@@ -17,8 +17,9 @@ Class {
 		'usesFloatingPoint',
 		'metadata'
 	],
-	#category : 'DJAudio-Formats',
-	#package : 'DJAudio-Formats'
+	#category : 'DJAudio-Formats-Readers',
+	#package : 'DJAudio-Formats',
+	#tag : 'Readers'
 }
 
 { #category : 'query metadata' }

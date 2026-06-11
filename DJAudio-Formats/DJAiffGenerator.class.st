@@ -9,7 +9,7 @@ I generate a silent but structurally valid AIFF file.
 "
 Class {
 	#name : 'DJAiffGenerator',
-	#superclass : 'Object',
+	#superclass : 'DJAudioFileGenerator',
 	#category : 'DJAudio-Formats-Helpers',
 	#package : 'DJAudio-Formats',
 	#tag : 'Helpers'

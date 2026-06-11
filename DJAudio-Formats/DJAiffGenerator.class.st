@@ -26,8 +26,15 @@ DJAiffGenerator class >> generateTo: aPathString [
         binaryWriteStreamDo: [ :s | s nextPutAll: aStream contents ]
 ]
 
+{ #category : 'accessing' }
+DJAiffGenerator >> bitsPerSample [ 
+ 
+^ 24
+]
+
 { #category : 'writing' }
-DJAiffGenerator >> buildAiffPayload [ 
+DJAiffGenerator >> buildPayload [ 
+    "Assemble all inner chunks."
     | aStream meta |
     aStream := WriteStream on: ByteArray new.
     meta := self metadata.
@@ -42,7 +49,17 @@ DJAiffGenerator >> buildAiffPayload [
     ^ aStream contents
 ]
 
-{ #category : 'parsing' }
+{ #category : 'accessing' }
+DJAiffGenerator >> bytesPerSample [ 
+ ^ self bitsPerSample // 8 
+]
+
+{ #category : 'accessing' }
+DJAiffGenerator >> durationInSeconds [ 
+^ 3
+]
+
+{ #category : 'accessing' }
 DJAiffGenerator >> metadata [ 
     ^ Dictionary new
         at: 'artist'  put: 'Lucia Cardin';
@@ -52,6 +69,19 @@ DJAiffGenerator >> metadata [
         at: 'genre'   put: 'Ambient';
         at: 'comment' put: 'Silent Test';
         yourself
+
+ 
+]
+
+{ #category : 'accessing' }
+DJAiffGenerator >> numChannels [ 
+^ 1
+]
+
+{ #category : 'accessing' }
+DJAiffGenerator >> numFrames [
+
+	^ self sampleRate * self durationInSeconds
 ]
 
 { #category : 'parsing' }
@@ -74,102 +104,42 @@ DJAiffGenerator >> readNextChunkFrom: aStream into: info [
         ifTrue: [ aStream skip: 1 ]
 ]
 
-{ #category : 'writing' }
-DJAiffGenerator >> writeANNOTo: aStream string: aString [ 
-    "ANNO chunk: free-form annotation"
-    self writeTextChunk: 'ANNO' string: aString to: aStream
+{ #category : 'accessing' }
+DJAiffGenerator >> sampleRate [ 
+^ 48000
 ]
 
 { #category : 'writing' }
-DJAiffGenerator >> writeAUTHTo: aStream [
-    "AUTH chunk: artist"
-    self writeTextChunk: 'AUTH' string: self artistName to: aStream 
+DJAiffGenerator >> writeCOMMTo: aStream [ 
+    "COMM: numChannels(2) + numFrames(4) + bitDepth(2) + sampleRate(10) = 18 bytes"
+    self writeFourCC: 'COMM' to: aStream.
+    self writeInt32BE: 18 to: aStream.
+    self writeInt16BE: self numChannels   to: aStream.
+    self writeUInt32BE: self numFrames    to: aStream.
+    self writeInt16BE: self bitsPerSample to: aStream.
+    self writeExtended: self sampleRate   to: aStream
 ]
 
 { #category : 'writing' }
-DJAiffGenerator >> writeAiffTo: aStream [
-    "Write FORM/AIFF container with all chunks."
-    | formPayload |
-    formPayload := self buildAiffPayload .
-    "FORM header"
-    self writeFourCC: 'FORM' to: aStream .
-    self writeInt32BE: formPayload size + 4 to: aStream .  "+4 for 'AIFF' tag"
-    self writeFourCC: 'AIFF' to: aStream .
-    aStream nextPutAll: formPayload
+DJAiffGenerator >> writeContainerTo: aStream [ 
+    "Write FORM/AIFF container with all chunks to aStream."
+    | payload |
+    payload := self buildPayload.
+    self writeFourCC: 'FORM' to: aStream.
+    self writeInt32BE: payload size + 4 to: aStream.   "+4 for 'AIFF' tag"
+    self writeFourCC: 'AIFF' to: aStream.
+    aStream nextPutAll: payload
 ]
 
 { #category : 'writing' }
-DJAiffGenerator >> writeExtended: aNumber to: aStream [
-    "Encode aNumber (a positive integer) as 80-bit IEEE 754 extended.
-     Byte layout: sign+exponent (16 bits) | mantissa (64 bits, integer part explicit)."
-    | value exp mantissa bytes |
-    value := aNumber asFloat.
-    value = 0.0 ifTrue: [
-        10 timesRepeat: [ aStream nextPut: 0 ].
-        ^ self ].
-    exp := (value log: 2) floor.
-    mantissa := (value / (2 raisedTo: exp) * (2 raisedTo: 63)) truncated.
-    "biased exponent: bias = 16383"
-    exp := exp + 16383.
-    bytes := ByteArray new: 10.
-    bytes at: 1 put: ((exp bitShift: -8) bitAnd: 16r7F).
-    bytes at: 2 put: (exp bitAnd: 16rFF).
-    "mantissa, big-endian, 8 bytes"
-    1 to: 8 do: [ :i |
-        bytes at: 10 - i + 1 put: ((mantissa bitShift: (i - 1) * 8) bitAnd: 16rFF) ].
-    aStream nextPutAll: bytes
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeFourCC: aString to: aStream [
-"CC stands for Four Character Code: a 4-byte identifier used in chunk-based binary formats like AIFF and WAV to label each chunk. It's just 4 ASCII characters packed into 4 bytes. aString asByteArray converts 'COMM' into #[67 79 77 77] and writes it directly to the stream "
-    aStream nextPutAll: aString asByteArray
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeInt16BE: anInteger to: aStream [
-    aStream nextPut: ((anInteger bitShift: -8) bitAnd: 16rFF).
-    aStream nextPut:  (anInteger bitAnd: 16rFF)
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeInt32BE: anInteger to: aStream [
-    aStream nextPut: ((anInteger bitShift: -24) bitAnd: 16rFF).
-    aStream nextPut: ((anInteger bitShift: -16) bitAnd: 16rFF).
-    aStream nextPut: ((anInteger bitShift:  -8) bitAnd: 16rFF).
-    aStream nextPut:  (anInteger                bitAnd: 16rFF)
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeNAMETo: aStream [
-    "NAME chunk: track title"
-    self writeTextChunk: 'NAME' string: self trackTitle to: aStream 
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeSSNDTo: aStream [
+DJAiffGenerator >> writeSSNDTo: aStream [ 
+    "SSND: offset(4) + blockSize(4) + silence."
     | dataSize |
     dataSize := self numFrames * self bytesPerSample * self numChannels.
     self writeFourCC: 'SSND' to: aStream.
-    self writeInt32BE: dataSize + 8 to: aStream.    "8 = offset(4) + blockSize(4)"
-    self writeUInt32BE: 0 to: aStream.              "offset"
-    self writeUInt32BE: 0 to: aStream.              "blockSize"
-    dataSize timesRepeat: [ aStream nextPut: 0 ]   "silence = all zeros"
-]
+    self writeInt32BE: dataSize + 8 to: aStream.
+    self writeUInt32BE: 0 to: aStream.   "offset"
+    self writeUInt32BE: 0 to: aStream.   "blockSize"
+    aStream nextPutAll: (ByteArray new: dataSize)   "silence in one shot"
 
-{ #category : 'writing' }
-DJAiffGenerator >> writeTextChunk: fourCC string: aString to: aStream [
-    "Write a text chunk with optional pad byte for even size."
-    | bytes size |
-    bytes := aString asByteArray.
-    size  := bytes size.
-    self writeFourCC: fourCC to: aStream.
-    self writeInt32BE: size to: aStream .
-    aStream nextPutAll: bytes.
-    size odd ifTrue: [ aStream nextPut: 0 ]   "AIFF chunks must start on even boundary"
-]
-
-{ #category : 'writing' }
-DJAiffGenerator >> writeUInt32BE: anInteger to: aStream [
-    self writeInt32BE: anInteger to: aStream 
 ]

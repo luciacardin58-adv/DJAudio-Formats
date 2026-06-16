@@ -3,7 +3,7 @@ Reads back the file produced by DJAiffGenerator and asserts
  every field matches exactly what the generator wrote.
 "
 Class {
-	#name : 'DJAiffAudioFormatsTests',
+	#name : 'DJAiffAudioFormatTest',
 	#superclass : 'TestCase',
 	#instVars : [
 		'testFile',
@@ -15,7 +15,7 @@ Class {
 }
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> setUp [
+DJAiffAudioFormatTest >> setUp [
 
 	super setUp.
 	testFile := DJAiffGenerator generateTo:
@@ -24,78 +24,78 @@ DJAiffAudioFormatsTests >> setUp [
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> tearDown [ 
+DJAiffAudioFormatTest >> tearDown [ 
  testFile exists ifTrue: [ testFile delete ]
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffArtist [
+DJAiffAudioFormatTest >> testAiffArtist [
     self assert: info artist equals: 'Lucia Cardin'
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffBitrateKbps [ 
+DJAiffAudioFormatTest >> testAiffBitrateKbps [ 
     "48000 * 24 * 1 / 1000 = 1152"
    
     self assert: info bitrateKbps equals: 1152
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffBitsPerSample [ 
+DJAiffAudioFormatTest >> testAiffBitsPerSample [ 
     self assert: info bitsPerSample equals: 24
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffCanHandleAifExtension [ 
+DJAiffAudioFormatTest >> testAiffCanHandleAifExtension [ 
     self assert: (DJAiffAudioFormat new canHandleFile:
         'track.aif' asFileReference)
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffCanHandleAiffExtension [ 
+DJAiffAudioFormatTest >> testAiffCanHandleAiffExtension [ 
     self assert: (DJAiffAudioFormat new canHandleFile:
         'track.aiff' asFileReference)
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffCannotHandleMp3Extension [ 
+DJAiffAudioFormatTest >> testAiffCannotHandleMp3Extension [ 
     self deny: (DJAiffAudioFormat new canHandleFile:
         'track.mp3' asFileReference)
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffCannotHandleWavExtension [ 
+DJAiffAudioFormatTest >> testAiffCannotHandleWavExtension [ 
     self deny: (DJAiffAudioFormat new canHandleFile:
         'track.wav' asFileReference)
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffChannelDescription [ 
+DJAiffAudioFormatTest >> testAiffChannelDescription [ 
     self assert: info channelDescription equals: 'Mono'
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffComment [ 
+DJAiffAudioFormatTest >> testAiffComment [ 
     self assert: (info metadata at: 'comment') equals: 'Silent Test'
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffDurationSeconds [ 
+DJAiffAudioFormatTest >> testAiffDurationSeconds [ 
     self assert: info durationInSeconds equals: 3
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffNumChannels [
+DJAiffAudioFormatTest >> testAiffNumChannels [
     self assert: info numChannels equals: 1
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffNumFrames [ 
+DJAiffAudioFormatTest >> testAiffNumFrames [ 
     self assert: info lengthInSamples equals: 144000
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffReturnsNilForInvalidFile [
+DJAiffAudioFormatTest >> testAiffReturnsNilForInvalidFile [
     | bogus result |
     bogus := FileLocator temp asFileReference / 'invalid.aiff'.
     bogus binaryWriteStreamDo: [ :aStream |
@@ -106,24 +106,24 @@ DJAiffAudioFormatsTests >> testAiffReturnsNilForInvalidFile [
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffSampleRate [ 
+DJAiffAudioFormatTest >> testAiffSampleRate [ 
     
     self assert: info sampleRate equals: 48000
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testAiffTitle [
+DJAiffAudioFormatTest >> testAiffTitle [
     self assert: info title equals: 'DummyAiff'
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testFilePathSet [ 
+DJAiffAudioFormatTest >> testFilePathSet [ 
     self assert: (info filePath endsWith: 'dj_test.aiff')
 
 ]
 
 { #category : 'running' }
-DJAiffAudioFormatsTests >> testInfoNotNil [ 
+DJAiffAudioFormatTest >> testInfoNotNil [ 
     self assert: info notNil
 
 ]

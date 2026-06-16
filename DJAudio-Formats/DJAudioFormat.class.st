@@ -42,12 +42,6 @@ DJAudioFormat >> formatName [
 	self subclassResponsibility
 ]
 
-{ #category : 'accessing' }
-DJAudioFormat >> readInfoForm: aFileReference [
-
-	self subclassResponsibility
-]
-
 { #category : 'as yet unclassified' }
 DJAudioFormat >> readInfoFrom: aFileReference [ 
     self subclassResponsibility

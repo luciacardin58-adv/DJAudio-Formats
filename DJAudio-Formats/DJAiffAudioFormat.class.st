@@ -54,13 +54,21 @@ DJAiffAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: inf
 ]
 
 { #category : 'reading' }
-DJAiffAudioFormat >> read80bitExtendedFrom: aStream [ 
-    "Decode 80-bit IEEE 754 extended big-endian to an integer sample rate."
-    | exp mantissa |
-    exp      := ((aStream next bitAnd: 16r7F) bitShift: 8) + aStream next.
+DJAiffAudioFormat >> read80bitExtendedFrom: aStream [
+	"Decode 80-bit IEEE 754 extended big-endian to an integer sample rate."
+  | sign exponent mantissa result bytes |
+    bytes    := aStream next: 10.
+    sign     := (bytes first ) bitAnd: 16r80.
+    exponent := ((bytes first) bitAnd: 16r7F) bitShift: 8.
+    exponent := exponent + (bytes at: 2).
     mantissa := 0.
-    1 to: 8 do: [ :i | mantissa := (mantissa bitShift: 8) + aStream next ].
-    ^ mantissa bitShift: exp - 16383 - 63
+    3 to: 10 do: [ :i | mantissa := (mantissa bitShift: 8) + (bytes at: i) ].
+    exponent = 0
+        ifTrue:  [ result := 0.0 ]
+        ifFalse: [
+            result := mantissa asFloat * (2.0 raisedTo: exponent - 16383 - 63).
+            sign ~= 0 ifTrue: [ result := result negated ] ].
+    ^ result
 ]
 
 { #category : 'reading' }

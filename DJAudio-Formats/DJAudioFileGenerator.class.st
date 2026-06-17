@@ -87,18 +87,19 @@ DJAudioFileGenerator >> writeExtended: aNumber to: aStream [
     "80-bit IEEE 754 extended big-endian — required for AIFF COMM sample rate."
     | value exp mantissa bytes |
     value := aNumber asFloat.
-    value = 0.0 ifTrue: [
+    value isZero ifTrue: [
         10 timesRepeat: [ aStream nextPut: 0 ].
         ^ self ].
-    exp      := (value log: 2) floor.
+    exp := (value log: 2) floor.
     mantissa := (value / (2 raisedTo: exp) * (2 raisedTo: 63)) truncated.
-    exp      := exp + 16383.
-    bytes    := ByteArray new: 10.
+    exp := exp + 16383.
+    bytes := ByteArray new: 10.
     bytes at: 1 put: ((exp bitShift: -8) bitAnd: 16r7F).
-    bytes at: 2 put:  (exp               bitAnd: 16rFF).
+    bytes at: 2 put: (exp bitAnd: 16rFF).
     1 to: 8 do: [ :i |
-        bytes at: 10 - i + 1
-              put: ((mantissa bitShift: (i - 1) * 8) bitAnd: 16rFF) ].
+        bytes
+            at: 10 - i + 1
+            put: ((mantissa bitShift: (i - 1 * 8) negated) bitAnd: 16rFF) ].
     aStream nextPutAll: bytes
 ]
 

@@ -84,12 +84,6 @@ DJWavAudioFormat >> parseWAV: aStream into: info [
 
 ]
 
-{ #category : 'reading' }
-DJWavAudioFormat >> readFourCC: aStream [ 
-    ^ String new: 4 streamContents: [ :s |
-        4 timesRepeat: [ s nextPut: (Character value: aStream next) ] ]
-]
-
 { #category : 'parsing' }
 DJWavAudioFormat >> readINFOSubchunkFrom: aStream into: info [ 
     | subId subSize value |
@@ -119,22 +113,6 @@ DJWavAudioFormat >> readInfoFrom: aFileReference [
     ].
     stream close.
     ^ info
-]
-
-{ #category : 'reading' }
-DJWavAudioFormat >> readLittleEndian16: aStream [ 
-    | b0 b1 |
-    b0 := aStream next.
-    b1 := aStream next.
-    ^ (b1 bitShift: 8) + b0
-]
-
-{ #category : 'reading' }
-DJWavAudioFormat >> readLittleEndian32: aStream [ 
-    | b0 b1 b2 b3 |
-    b0 := aStream next. b1 := aStream next.
-    b2 := aStream next. b3 := aStream next.
-    ^ (b3 bitShift: 24) + (b2 bitShift: 16) + (b1 bitShift: 8) + b0
 ]
 
 { #category : 'reading' }

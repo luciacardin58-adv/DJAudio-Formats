@@ -76,7 +76,7 @@ DJAiffAudioFormatTest >> testAiffChannelDescription [
 
 { #category : 'running' }
 DJAiffAudioFormatTest >> testAiffComment [ 
-    self assert: (info metadata at: 'comment') equals: 'Silent Test'
+    self assert: (info metadata at: 'comment') equals: 'Genre: Ambient'
 ]
 
 { #category : 'running' }

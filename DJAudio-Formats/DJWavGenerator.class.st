@@ -23,6 +23,11 @@ DJWavGenerator class >> generateTo: aFileReference [
     ^ aFileReference
 ]
 
+{ #category : 'helpers' }
+DJWavGenerator >> blockAlign [ 
+^ self numChannels * self bytesPerSample 
+]
+
 { #category : 'writing' }
 DJWavGenerator >> buildDataChunk [ 
     "data chunk: silence."
@@ -64,6 +69,11 @@ DJWavGenerator >> buildListChunk [
     self writeInt32LE: inner contents size to: aStream.
     aStream nextPutAll: inner contents.
     ^ aStream contents
+]
+
+{ #category : 'helpers' }
+DJWavGenerator >> byteRate [ 
+^ self sampleRate * self numChannels * self bytesPerSample 
 ]
 
 { #category : 'accessing' }

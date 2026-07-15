@@ -42,18 +42,24 @@ DJAudioFormat >> formatName [
 	self subclassResponsibility
 ]
 
+{ #category : 'accessing' }
+DJAudioFormat >> formats [
+
+	^ { DJAiffAudioFormat new . DJWavAudioFormat new }
+]
+
 { #category : 'reading' }
 DJAudioFormat >> readFourCC: aStream [ 
     ^ String new: 4 streamContents: [ :s |
         4 timesRepeat: [ s nextPut: (Character value: aStream next) ] ]
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'reading' }
 DJAudioFormat >> readInfoFrom: aFileReference [ 
     self subclassResponsibility
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'reading' }
 DJAudioFormat >> readInfoFromFile: aFileReference [ 
     formats do: [ :fmt |
         (fmt canHandleFile: aFileReference) ifTrue: [

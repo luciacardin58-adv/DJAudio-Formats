@@ -107,24 +107,6 @@ DJAiffAudioFormat >> readFourCC: aStream [
         4 timesRepeat: [ s nextPut: (Character value: aStream next) ] ]
 ]
 
-{ #category : 'accessing' }
-DJAiffAudioFormat >> readInfoForm: aFileReference [
-
-	  | info stream |
-    info := DJAudioFileInfo new.
-    info filePath: aFileReference fullName.
-    [
-        stream := aFileReference binaryReadStream.
-        self parseAIFF: stream into: info.
-    ] on: Error do: [ :e |
-        Transcript show: 'DJAiffAudioFormat error: ' , e messageText; cr.
-        ^nil
-    ] ensure: [
-        stream ifNotNil: [ stream close ]
-    ].
-    ^info
-]
-
 { #category : 'reading' }
 DJAiffAudioFormat >> readInfoFrom: aFileReference [
  | info stream |

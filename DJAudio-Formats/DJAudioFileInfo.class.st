@@ -15,7 +15,9 @@ Class {
 		'lengthInSamples',
 		'numChannels',
 		'usesFloatingPoint',
-		'metadata'
+		'metadata',
+		'dataOffset',
+		'dataSize'
 	],
 	#category : 'DJAudio-Formats-Readers',
 	#package : 'DJAudio-Formats',
@@ -57,6 +59,30 @@ DJAudioFileInfo >> channelDescription [
     numChannels = 1 ifTrue: [ ^'Mono' ].
     numChannels = 2 ifTrue: [ ^'Stereo' ].
     ^numChannels printString 
+]
+
+{ #category : 'accessing' }
+DJAudioFileInfo >> dataOffset [ 
+
+^ dataOffset
+]
+
+{ #category : 'accessing' }
+DJAudioFileInfo >> dataOffset: anInteger [
+
+dataOffset := anInteger 
+]
+
+{ #category : 'accessing' }
+DJAudioFileInfo >> dataSize [ 
+
+^ dataSize
+]
+
+{ #category : 'accessing' }
+DJAudioFileInfo >> dataSize: anInteger [ 
+
+dataSize := anInteger 
 ]
 
 { #category : 'helpers' }

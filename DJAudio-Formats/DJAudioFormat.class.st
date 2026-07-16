@@ -84,3 +84,25 @@ DJAudioFormat >> readLittleEndian32: aStream [
     b2 := aStream next. b3 := aStream next.
     ^ (b3 bitShift: 24) + (b2 bitShift: 16) + (b1 bitShift: 8) + b0
 ]
+
+{ #category : 'reading' }
+DJAudioFormat >> readSamplesFrom: aFileReference info: info [
+
+	 "Answer a FloatArray of mono-mixed samples in -1.0 .. 1.0."
+		| stream frames channels bytesPerSample divisor samples sum |
+		channels := info numChannels.
+		bytesPerSample := info bitsPerSample + 7 // 8.
+		divisor := channels * (2 raisedTo: info bitsPerSample - 1) asFloat.
+		frames := info dataSize // (channels * bytesPerSample).
+		samples := Float32Array new: frames.
+		stream := aFileReference binaryReadStream.
+		[
+			stream position: info dataOffset.
+			1 to: frames do: [ :i |
+					sum := 0.
+					channels timesRepeat: [
+						sum := sum + (self readSampleFrom: stream bytes: bytesPerSample) ].
+					samples at: i put: sum asFloat / divisor ] ] ensure: [
+			stream close ].
+		^ samples 
+]

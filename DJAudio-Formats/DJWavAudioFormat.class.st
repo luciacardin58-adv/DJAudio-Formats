@@ -42,11 +42,16 @@ DJWavAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: info
 ]
 
 { #category : 'parsing' }
-DJWavAudioFormat >> parseDATA: aStream size: chunkSize into: info [ 
-    | bytesPerSample |
-    bytesPerSample := (info bitsPerSample + 7) // 8.
-    info lengthInSamples: chunkSize // (bytesPerSample * info numChannels).
-    aStream skip: chunkSize   "skip audio data — we read metadata only"
+DJWavAudioFormat >> parseDATA: aStream size: chunkSize into: info [
+
+	
+		| bytesPerSample |
+		bytesPerSample := info bitsPerSample + 7 // 8.
+		info dataOffset: aStream position.
+		info dataSize: chunkSize.
+		info lengthInSamples:
+			chunkSize // (bytesPerSample * info numChannels).
+		aStream skip: chunkSize "skip audio data — we read metadata only" 
 ]
 
 { #category : 'parsing' }
@@ -133,6 +138,19 @@ DJWavAudioFormat >> readRiffHeaderFrom: aStream [
     self readLittleEndian32: aStream.   "skip file size field"
     (self readFourCC: aStream) = 'WAVE'
         ifFalse: [ ^ self error: 'Not a WAVE file' ]
+
+]
+
+{ #category : 'reading' }
+DJWavAudioFormat >> readSampleFrom: aStream bytes: n [ 
+    "One signed little-endian PCM sample of n bytes."
+    | value shift range |
+    value := 0. shift := 0.
+    n timesRepeat: [
+        value := value + (aStream next bitShift: shift).
+        shift := shift + 8 ].
+    range := 1 bitShift: n * 8.
+    ^ value >= (range // 2) ifTrue: [ value - range ] ifFalse: [ value ]
 
 ]
 

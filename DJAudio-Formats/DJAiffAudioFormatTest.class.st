@@ -94,6 +94,26 @@ DJAiffAudioFormatTest >> testAiffNumFrames [
     self assert: info lengthInSamples equals: 144000
 ]
 
+{ #category : 'tests' }
+DJAiffAudioFormatTest >> testAiffPeaksMatchFullScaleSine [
+
+	| gen stream file infoSine samples peaks |
+	gen := DJAiffGenerator new.
+	gen frequency: 480. "480 @ 48000 = 100 samples/cycle"
+	stream := WriteStream on: ByteArray new.
+	gen writeContainerTo: stream.
+	file := FileLocator temp asFileReference / 'peaks-test.aiff'.
+	file binaryWriteStreamDo: [ :s | s nextPutAll: stream contents ].
+	[ "min near -1"
+		infoSine := DJAiffAudioFormat new readInfoFrom: file.
+		samples := DJAiffAudioFormat new readSamplesFrom: file info: infoSine.
+		peaks := DJAiffAudioFormat new peaksFrom: samples buckets: 100.
+		peaks do: [ :each |
+				self assert: (each second between: 0.9 and: 1.0). "max near +1"
+				self assert: (each first between: -1.0 and: -0.9) ] ] ensure: [
+		file ensureDelete ]
+]
+
 { #category : 'running' }
 DJAiffAudioFormatTest >> testAiffReturnsNilForInvalidFile [
     | bogus result |
@@ -125,22 +145,5 @@ DJAiffAudioFormatTest >> testFilePathSet [
 { #category : 'running' }
 DJAiffAudioFormatTest >> testInfoNotNil [ 
     self assert: info notNil
-
-]
-
-{ #category : 'running' }
-DJAiffAudioFormatTest >> testPeaksMatchFullScaleSine [ 
-    | file info samples peaks |
-    file    := DJWavGenerator new
-                   "whatever your generator API is — sine, 1s, 44100, 16-bit, mono"
-                   generateTo: (FileLocator temp asFileReference / 'peaks-test.wav').
-    info    := DJWavAudioFormat new readInfoFrom: file.
-    samples := DJWavAudioFormat new readSamplesFrom: file info: info.
-    peaks   := DJWavAudioFormat new peaksFrom: samples buckets: 100.
-
-    "each bucket spans many full cycles → hits both rails"
-    peaks do: [ :each |
-        self assert: (each second between: 0.9 and: 1.0).    "max near +1"
-        self assert: (each first  between: -1.0 and: -0.9) ]. "min near -1"
 
 ]

@@ -70,6 +70,24 @@ DJWavAudioFormatsTest >> testInfoNotNil [
     self assert: info notNil
 ]
 
+{ #category : 'running' }
+DJWavAudioFormatsTest >> testPeaksMatchFullScaleSine [
+	| gen stream file infoSine samples peaks |
+	gen := DJWavGenerator new.
+	gen frequency: 441.                    "441 @ 44100 = 100 samples/cycle — sine, not silence"
+	stream := WriteStream on: ByteArray new.
+	gen writeContainerTo: stream.
+	file := FileLocator temp asFileReference / 'peaks-test.wav'.
+	file binaryWriteStreamDo: [ :s | s nextPutAll: stream contents ].
+	[ infoSine    := DJWavAudioFormat new readInfoFrom: file.
+	  samples := DJWavAudioFormat new readSamplesFrom: file info: infoSine.
+	  peaks   := DJWavAudioFormat new peaksFrom: samples buckets: 100.
+	  peaks do: [ :each |
+		self assert: (each second between: 0.9 and: 1.0).    "max near +1"
+		self assert: (each first  between: -1.0 and: -0.9) ] ]  "min near -1"
+		ensure: [ file ensureDelete ]
+]
+
 { #category : 'tests' }
 DJWavAudioFormatsTest >> testReadSampleRate [ 
 self assert: info sampleRate equals: 48000

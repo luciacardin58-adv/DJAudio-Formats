@@ -28,20 +28,31 @@ DJAiffGenerator class >> generateTo: aFileReference [
 ]
 
 { #category : 'writing' }
-DJAiffGenerator >> buildPayload [ 
-    "Assemble all inner chunks."
-    | aStream meta |
-    aStream := WriteStream on: ByteArray new.
-    meta := self metadata.
-    self writeCOMMTo: aStream.
-    self writeSSNDTo: aStream.
-    self writeTextChunk: 'NAME' string: (meta at: 'title')   to: aStream.
-    self writeTextChunk: 'AUTH' string: (meta at: 'artist')  to: aStream.
-    self writeTextChunk: 'ANNO' string: (meta at: 'comment') to: aStream.
-    self writeTextChunk: 'ANNO' string: 'Album: ' , (meta at: 'album') to: aStream.
-    self writeTextChunk: 'ANNO' string: 'Year: '  , (meta at: 'year')  to: aStream.
-    self writeTextChunk: 'ANNO' string: 'Genre: ' , (meta at: 'genre') to: aStream.
-    ^ aStream contents
+DJAiffGenerator >> buildPayload [
+	"Assemble all inner chunks."
+	| aStream meta |
+	aStream := WriteStream on: ByteArray new.
+	meta := self metadata.
+	self writeCOMMTo: aStream.
+	frequency
+		ifNil:   [ self writeSSNDTo: aStream ]
+		ifNotNil: [ self writeSineSSND: frequency to: aStream ].
+	self writeTextChunk: 'NAME' string: (meta at: 'title') to: aStream.
+	self writeTextChunk: 'AUTH' string: (meta at: 'artist') to: aStream.
+	self writeTextChunk: 'ANNO' string: (meta at: 'comment') to: aStream.
+	self
+		writeTextChunk: 'ANNO'
+		string: 'Album: ' , (meta at: 'album')
+		to: aStream.
+	self
+		writeTextChunk: 'ANNO'
+		string: 'Year: ' , (meta at: 'year')
+		to: aStream.
+	self
+		writeTextChunk: 'ANNO'
+		string: 'Genre: ' , (meta at: 'genre')
+		to: aStream.
+	^ aStream contents
 ]
 
 { #category : 'accessing' }
@@ -101,6 +112,15 @@ DJAiffGenerator >> writeContainerTo: aStream [
 ]
 
 { #category : 'writing' }
+DJAiffGenerator >> writeIntBE: anInteger bytes: n to: s [
+	"n-byte big-endian, two's complement for negatives."
+
+	n to: 1 by: -1 do: [ :i |
+		s nextPut: ((anInteger bitShift: i - 1 * 8 negated) bitAnd: 16rFF) ]
+			
+]
+
+{ #category : 'writing' }
 DJAiffGenerator >> writeSSNDTo: aStream [ 
     "SSND: offset(4) + blockSize(4) + silence."
     | dataSize |
@@ -110,5 +130,24 @@ DJAiffGenerator >> writeSSNDTo: aStream [
     self writeUInt32BE: 0 to: aStream.   "offset"
     self writeUInt32BE: 0 to: aStream.   "blockSize"
     aStream nextPutAll: (ByteArray new: dataSize)   "silence in one shot"
+
+]
+
+{ #category : 'writing' }
+DJAiffGenerator >> writeSineSSND: freq to: s [ 
+    "SSND chunk: full-scale sine at freq Hz, big-endian, any bit depth."
+    | dataSize amp nBytes |
+    nBytes   := self bytesPerSample.
+    dataSize := self numFrames * nBytes * self numChannels.
+    amp      := (2 raisedTo: (nBytes * 8) - 1) - 1.
+    self writeFourCC: 'SSND' to: s.
+    self writeInt32BE: dataSize + 8 to: s.
+    self writeUInt32BE: 0 to: s.
+    self writeUInt32BE: 0 to: s.
+    0 to: self numFrames - 1 do: [ :n |
+        | value |
+        value := (amp * (2 * Float pi * freq * n / self sampleRate) sin) rounded.
+        self numChannels timesRepeat: [
+            self writeIntBE: value bytes: nBytes to: s ] ]
 
 ]

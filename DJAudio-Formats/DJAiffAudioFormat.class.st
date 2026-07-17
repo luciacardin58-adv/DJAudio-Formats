@@ -40,9 +40,12 @@ DJAiffAudioFormat >> parseCOMM: aStream size: chunkSize into: info [
 ]
 
 { #category : 'parsing' }
-DJAiffAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: info [ 
-    chunkId = 'COMM' ifTrue: [
+DJAiffAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: info [
+
+	 chunkId = 'COMM' ifTrue: [
         ^ self parseCOMM: aStream size: chunkSize into: info ].
+    chunkId = 'SSND' ifTrue: [
+        ^ self parseSSND: aStream size: chunkSize into: info ].
     chunkId = 'NAME' ifTrue: [
         ^ info metadata at: 'title'   put: (self readText: aStream size: chunkSize) ].
     chunkId = 'AUTH' ifTrue: [
@@ -51,6 +54,16 @@ DJAiffAudioFormat >> parseChunk: chunkId size: chunkSize from: aStream into: inf
         ^ info metadata at: 'comment' put: (self readText: aStream size: chunkSize) ].
     "unknown chunk — skip content only; padding handled by caller"
     aStream skip: chunkSize
+]
+
+{ #category : 'parsing' }
+DJAiffAudioFormat >> parseSSND: aStream size: chunkSize into: info [ 
+    "SSND: offset(4) + blockSize(4) + PCM data, big-endian."
+    self readBigEndian32: aStream.   "offset — usually 0"
+    self readBigEndian32: aStream.   "blockSize — usually 0"
+    info dataOffset: aStream position.   "first PCM byte, after the 8-byte header"
+    info dataSize:   chunkSize - 8.      "chunkSize includes those 8 bytes"
+    aStream skip: chunkSize - 8          "skip PCM — metadata-only parse"
 ]
 
 { #category : 'reading' }
@@ -134,6 +147,16 @@ DJAiffAudioFormat >> readNextChunkFrom: aStream into: info [
     "every odd-sized chunk is followed by one pad byte"
     (chunkSize odd and: [ aStream atEnd not ])
         ifTrue: [ aStream skip: 1 ]
+]
+
+{ #category : 'reading' }
+DJAiffAudioFormat >> readSampleFrom: aStream bytes: n [ 
+    "One signed big-endian PCM sample of n bytes."
+    | value range |
+    value := 0.
+    n timesRepeat: [ value := (value bitShift: 8) + aStream next ].
+    range := 1 bitShift: n * 8.
+    ^ value >= (range // 2) ifTrue: [ value - range ] ifFalse: [ value ]
 ]
 
 { #category : 'reading' }

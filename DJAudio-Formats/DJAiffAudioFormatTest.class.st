@@ -127,3 +127,20 @@ DJAiffAudioFormatTest >> testInfoNotNil [
     self assert: info notNil
 
 ]
+
+{ #category : 'running' }
+DJAiffAudioFormatTest >> testPeaksMatchFullScaleSine [ 
+    | file info samples peaks |
+    file    := DJWavGenerator new
+                   "whatever your generator API is — sine, 1s, 44100, 16-bit, mono"
+                   generateTo: (FileLocator temp asFileReference / 'peaks-test.wav').
+    info    := DJWavAudioFormat new readInfoFrom: file.
+    samples := DJWavAudioFormat new readSamplesFrom: file info: info.
+    peaks   := DJWavAudioFormat new peaksFrom: samples buckets: 100.
+
+    "each bucket spans many full cycles → hits both rails"
+    peaks do: [ :each |
+        self assert: (each second between: 0.9 and: 1.0).    "max near +1"
+        self assert: (each first  between: -1.0 and: -0.9) ]. "min near -1"
+
+]

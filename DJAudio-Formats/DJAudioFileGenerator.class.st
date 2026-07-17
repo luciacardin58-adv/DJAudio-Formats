@@ -1,14 +1,29 @@
 "
 Abstract base for programmatic audio file generators. Used exclusively in test.
  Subclasses must implement:
-   metadata           — Dictionary with string keys
-   writeContainerTo:  — write the full binary format to a WriteStream
+   **metadata**           — Dictionary with string keys
+   **writeContainerTo:**  — write the full binary format to a WriteStream
  
  The factory method forFormat: returns the right concrete generator.
+
+By default the data chunk is silence. To generate a full-scale sine
+instead, set the `frequency` (Hz) before writing:
+
+    gen := DJWavGenerator new.
+    gen frequency: 441.
+    gen writeContainerTo: aStream.
+
+When _frequency_ is nil (the default), silence is written; when set,
+each subclass emits a full-scale sine at that frequency. Pick a divisor
+of the sample rate for whole cycles (e.g. 441 @ 44100, 480 @ 48000).
+
 "
 Class {
 	#name : 'DJAudioFileGenerator',
 	#superclass : 'Object',
+	#instVars : [
+		'frequency'
+	],
 	#category : 'DJAudio-Formats-Helpers',
 	#package : 'DJAudio-Formats',
 	#tag : 'Helpers'
@@ -42,6 +57,18 @@ DJAudioFileGenerator >> bytesPerSample [
 { #category : 'accessing' }
 DJAudioFileGenerator >> durationInSeconds [ 
 ^ 3
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> frequency [ 
+
+^ frequency
+]
+
+{ #category : 'accessing' }
+DJAudioFileGenerator >> frequency: aFrequencyInHertz [
+
+	frequency := aFrequencyInHertz
 ]
 
 { #category : 'template method' }

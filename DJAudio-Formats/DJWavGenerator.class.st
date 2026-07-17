@@ -71,6 +71,25 @@ DJWavGenerator >> buildListChunk [
     ^ aStream contents
 ]
 
+{ #category : 'writing' }
+DJWavGenerator >> buildSineDataChunk: freq [ 
+    "data chunk: full-scale sine at freq Hz, little-endian, any bit depth."
+    | dataSize aStream amp nBytes |
+    nBytes   := self bytesPerSample.
+    dataSize := self numFrames * self numChannels * nBytes.
+    amp      := (2 raisedTo: (nBytes * 8) - 1) - 1.
+    aStream  := WriteStream on: ByteArray new.
+    self writeFourCC: 'data' to: aStream.
+    self writeInt32LE: dataSize to: aStream.
+    0 to: self numFrames - 1 do: [ :n |
+        | value |
+        value := (amp * (2 * Float pi * freq * n / self sampleRate) sin) rounded.
+        self numChannels timesRepeat: [
+            self writeIntLE: value bytes: nBytes to: aStream ] ].
+    ^ aStream contents
+
+]
+
 { #category : 'helpers' }
 DJWavGenerator >> byteRate [ 
 ^ self sampleRate * self numChannels * self bytesPerSample 
@@ -86,18 +105,21 @@ DJWavGenerator >> metadata [
 
 { #category : 'writing' }
 DJWavGenerator >> writeContainerTo: aStream [
-	 "Write RIFF/WAVE container with fmt, LIST/INFO, and data chunks."
-    | fmtChunk listChunk dataChunk totalSize |
-    fmtChunk  := self buildFmtChunk.
-    listChunk := self buildListChunk.
-    dataChunk := self buildDataChunk.
-    totalSize := 4 + fmtChunk size + listChunk size + dataChunk size.
-    self writeFourCC: 'RIFF' to: aStream.
-    self writeInt32LE: totalSize to: aStream.
-    self writeFourCC: 'WAVE' to: aStream.
-    aStream nextPutAll: fmtChunk.
-    aStream nextPutAll: listChunk.
-    aStream nextPutAll: dataChunk
+	"Write RIFF/WAVE container with fmt, LIST/INFO, and data chunks."
+
+	| fmtChunk listChunk dataChunk totalSize |
+	fmtChunk := self buildFmtChunk.
+	listChunk := self buildListChunk.
+	dataChunk := frequency
+		ifNil:   [ self buildDataChunk ]
+		ifNotNil: [ self buildSineDataChunk: frequency ].
+	totalSize := 4 + fmtChunk size + listChunk size + dataChunk size.
+	self writeFourCC: 'RIFF' to: aStream.
+	self writeInt32LE: totalSize to: aStream.
+	self writeFourCC: 'WAVE' to: aStream.
+	aStream nextPutAll: fmtChunk.
+	aStream nextPutAll: listChunk.
+	aStream nextPutAll: dataChunk
 ]
 
 { #category : 'writing' }
@@ -111,4 +133,11 @@ DJWavGenerator >> writeInfoSubchunk: fourCC string: aString to: aStream [
     aStream nextPutAll: bytes.
     aStream nextPut: 0.        "null terminator"
     size odd ifTrue: [ aStream nextPut: 0 ]   "pad to even boundary"
+]
+
+{ #category : 'writing' }
+DJWavGenerator >> writeIntLE: anInteger bytes: n to: aStream [ 
+    "n-byte little-endian, two's complement for negatives."
+    1 to: n do: [ :i |
+        aStream nextPut: ((anInteger bitShift: (i - 1) * 8 negated) bitAnd: 16rFF)]
 ]

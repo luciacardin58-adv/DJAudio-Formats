@@ -49,6 +49,24 @@ DJAudioFormat >> formats [
 ]
 
 { #category : 'reading' }
+DJAudioFormat >> peaksFrom: samples buckets: aCount [
+
+	"Reduce samples to aCount min/max pairs, one per display bar."
+		| binSize |
+	
+    binSize := (samples size / aCount) ceiling max: 1.
+    ^ (1 to: samples size by: binSize) collect: [ :start |
+        | stop lo hi v |
+        stop := (start + binSize - 1) min: samples size.
+        lo := 1.0. hi := -1.0.
+        start to: stop do: [ :i |
+            v := samples at: i.
+            lo := lo min: v.
+            hi := hi max: v ].
+        { lo. hi } ]
+]
+
+{ #category : 'reading' }
 DJAudioFormat >> readFourCC: aStream [ 
     ^ String new: 4 streamContents: [ :s |
         4 timesRepeat: [ s nextPut: (Character value: aStream next) ] ]

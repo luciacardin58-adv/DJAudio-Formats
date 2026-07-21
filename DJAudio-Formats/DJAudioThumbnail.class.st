@@ -69,14 +69,30 @@ DJAudioThumbnail >> loadFromFile: aPath [
 ]
 
 { #category : 'compute' }
+DJAudioThumbnail >> minMaxFrom: startThumb to: stopThumb [
+	| mn mx pair from to |
+	peaks isEmpty ifTrue: [ ^ 0.0 @ 0.0 ].
+	from := startThumb max: 1.
+	to := stopThumb min: peaks size.
+	from > to ifTrue: [ ^ 0.0 @ 0.0 ].
+	pair := peaks at: from.
+	mn := pair x. mx := pair y.
+	from + 1 to: to do: [ :i |
+		pair := peaks at: i.
+		pair x < mn ifTrue: [ mn := pair x ].
+		pair y > mx ifTrue: [ mx := pair y ] ].
+	^ mn @ mx
+]
+
+{ #category : 'compute' }
 DJAudioThumbnail >> minMaxOf: samples from: startIndex to: stopIndex [
 	| mn mx v |
 	mn := samples at: startIndex.
 	mx := mn.
 	startIndex + 1 to: stopIndex do: [ :j |
 		v := samples at: j.
-		mn := mn min: v.
-		mx := mx max: v ].
+		v < mn ifTrue: [ mn := v ].
+		v > mx ifTrue: [ mx := v ] ].
 	^ mn @ mx
 ]
 

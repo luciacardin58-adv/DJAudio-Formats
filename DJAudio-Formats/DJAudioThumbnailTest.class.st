@@ -10,7 +10,7 @@ Class {
 DJAudioThumbnailTest >> testFromGeneratedFile [
 	| file t |
 	file := DJWavGenerator generateTo: (FileLocator temp asFileReference / 'thumb-test.wav').
-	t := DJAudioThummbnail fromFile: file.
+	t := DJAudioThumbnail fromFile: file.
 	self assert: t peaks notEmpty.
 	self assert: t sampleRate equals: 44100.
 	t peaks do: [ :p |

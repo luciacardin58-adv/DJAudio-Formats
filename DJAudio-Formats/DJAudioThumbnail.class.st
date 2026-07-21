@@ -12,7 +12,7 @@ Simplifications vs JUCE: synchronous (no async LevelDataSource / ChangeBroadcast
 See DJWaveformElement for the consumer.
 "
 Class {
-	#name : 'DJAudioThummbnail',
+	#name : 'DJAudioThumbnail',
 	#superclass : 'BlElement',
 	#instVars : [
 		'samplesPerThumbSample',
@@ -26,12 +26,12 @@ Class {
 }
 
 { #category : 'instance creation' }
-DJAudioThummbnail class >> fromFile: aPath [
+DJAudioThumbnail class >> fromFile: aPath [
 	^ self new loadFromFile: aPath; yourself
 ]
 
 { #category : 'compute' }
-DJAudioThummbnail >> computeFrom: samples [
+DJAudioThumbnail >> computeFrom: samples [
 	"samples: mono Float32Array in -1.0..1.0"
 	| numThumbs result |
 	totalSamples := samples size.
@@ -46,7 +46,7 @@ DJAudioThummbnail >> computeFrom: samples [
 ]
 
 { #category : 'initialization' }
-DJAudioThummbnail >> initialize [
+DJAudioThumbnail >> initialize [
 	super initialize.
 	samplesPerThumbSample := 512.
 	peaks := Array new.
@@ -55,7 +55,7 @@ DJAudioThummbnail >> initialize [
 ]
 
 { #category : 'loading' }
-DJAudioThummbnail >> loadFromFile: aPath [
+DJAudioThumbnail >> loadFromFile: aPath [
 	| reference format info samples |
 	reference := aPath asFileReference.
 	format := DJAudioFormat new formats
@@ -69,7 +69,7 @@ DJAudioThummbnail >> loadFromFile: aPath [
 ]
 
 { #category : 'compute' }
-DJAudioThummbnail >> minMaxOf: samples from: startIndex to: stopIndex [
+DJAudioThumbnail >> minMaxOf: samples from: startIndex to: stopIndex [
 	| mn mx v |
 	mn := samples at: startIndex.
 	mx := mn.
@@ -81,7 +81,12 @@ DJAudioThummbnail >> minMaxOf: samples from: startIndex to: stopIndex [
 ]
 
 { #category : 'accessing' }
-DJAudioThummbnail >> peaksForColumns: nColumns [
+DJAudioThumbnail >> peaks [ 
+^ peaks
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> peaksForColumns: nColumns [
 	| result perColumn |
 	(nColumns <= 0 or: [ peaks isEmpty ]) ifTrue: [ ^ Array new ].
 	nColumns >= peaks size ifTrue: [ ^ peaks ].
@@ -93,4 +98,30 @@ DJAudioThummbnail >> peaksForColumns: nColumns [
 		stop := (c * perColumn) floor max: start.
 		result at: c put: (self minMaxFrom: start to: stop) ].
 	^ result
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> sampleRate [ 
+^ sampleRate
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> samplesPerThumbSample [
+	^ samplesPerThumbSample
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> samplesPerThumbSample: anInteger [
+	samplesPerThumbSample := anInteger
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> size [ 
+^ peaks size
+]
+
+{ #category : 'accessing' }
+DJAudioThumbnail >> totalSamples [
+
+^ totalSamples 
 ]

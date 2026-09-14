@@ -64,7 +64,7 @@ DJTempoEstimator >> bpmForLag: aLag [
 DJTempoEstimator >> computeFrom: aDJOnsetEnvelope [
 	"Answers the receiver. bpm stays nil if the envelope is too short."
 
-	| minLag maxLag scores bestIndex bestLag |
+	| minLag maxLag scores bestLag |
 	frames := aDJOnsetEnvelope frames.
 	frameRate := aDJOnsetEnvelope frameRate.
 	bpm := nil.
@@ -73,11 +73,14 @@ DJTempoEstimator >> computeFrom: aDJOnsetEnvelope [
 	maxLag := (self lagForBpm: minBpm) ceiling.
 	frames size < (maxLag * 2) ifTrue: [ ^ self ].
 	scores := self scoresFrom: minLag to: maxLag.
-	bestIndex := self indexOfMaximumIn: scores.
-	bestLag := minLag + bestIndex - 1.
-	bpm := (self bpmForLag:
-			 bestLag + (self refinementOf: scores at: bestIndex)) asFloat.
-	phase := self phaseForLag: bestLag
+	bestLag := minLag + (self indexOfMaximumIn: scores) - 1.
+	phase := self phaseForLag: bestLag.
+	bpm := (self bpmForLag: (self refinedLagFrom: bestLag)) asFloat
+]
+
+{ #category : 'accessing' }
+DJTempoEstimator >> frameRate [
+	^ frameRate
 ]
 
 { #category : 'testing' }
@@ -179,6 +182,39 @@ DJTempoEstimator >> octaveSigma [
 	 This is a compromise, not a solution. Set minBpm/maxBpm for real work."
 
 	^ 0.55
+]
+
+{ #category : 'compute' }
+DJTempoEstimator >> parabolicOffsetAt: aPosition [
+	"Sub-frame correction from the two neighbours. Zero at either end."
+
+	| left centre right denominator |
+	(aPosition < 1 or: [ aPosition >= (frames size - 1) ]) ifTrue: [ ^ 0 ].
+	left := frames at: aPosition.
+	centre := frames at: aPosition + 1.
+	right := frames at: aPosition + 2.
+	denominator := left - (2 * centre) + right.
+	denominator = 0 ifTrue: [ ^ 0 ].
+	^ left - right / (2 * denominator)
+]
+
+{ #category : 'compute' }
+DJTempoEstimator >> peakNear: aPosition within: aWindow above: aThreshold [
+	"Strongest frame within aWindow of aPosition, in sub-frame units. Positions are zero-based, like phase. Answers nil if nothing rises above aThreshold, so a missing beat is skipped rather than invented."
+
+	| best bestValue low high |
+	low := aPosition - aWindow max: 0.
+	high := aPosition + aWindow min: frames size - 1.
+	best := nil.
+	bestValue := -1.
+	low to: high do: [ :i |
+		| value |
+		value := frames at: i + 1.
+		value > bestValue ifTrue: [
+			bestValue := value.
+			best := i ] ].
+	(best isNil or: [ bestValue < aThreshold ]) ifTrue: [ ^ nil ].
+	^ best + (self parabolicOffsetAt: best)
 ]
 
 { #category : 'accessing' }
@@ -287,6 +323,24 @@ DJTempoEstimator >> seedBeats [
 	 predict from an integer lag, so both must stay near the start."
 
 	^ 24
+]
+
+{ #category : 'compute' }
+DJTempoEstimator >> slopeOf: positions against: beatNumbers [
+	"Least-squares slope, in frames per beat. Nil if degenerate."
+
+	| n sumK sumT sumKT sumKK denominator |
+	n := beatNumbers size.
+	sumK := beatNumbers inject: 0 into: [ :a :b | a + b ].
+	sumT := positions inject: 0 into: [ :a :b | a + b ].
+	sumKT := 0.
+	sumKK := 0.
+	1 to: n do: [ :i |
+		sumKT := sumKT + ((beatNumbers at: i) * (positions at: i)).
+		sumKK := sumKK + (beatNumbers at: i) squared ].
+	denominator := n * sumKK - sumK squared.
+	denominator = 0 ifTrue: [ ^ nil ].
+	^ n * sumKT - (sumK * sumT) / denominator
 ]
 
 { #category : 'compute' }

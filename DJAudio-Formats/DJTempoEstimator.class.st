@@ -284,7 +284,7 @@ DJTempoEstimator >> refinedLagFrom: aLag [
 			             against: numbers
 			             slope: slope ].
 	(slope - aLag) abs / aLag > 0.1 ifTrue: [ ^ aLag ].
-	phase := intercept.
+	phase := intercept \\ slope.
 	^ slope
 ]
 
